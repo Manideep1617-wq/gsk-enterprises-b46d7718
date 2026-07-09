@@ -81,7 +81,7 @@ function BrowsePage() {
   const [q, setQ] = useState(search.q ?? "");
 
   const setSearch = (patch: Partial<z.infer<typeof searchSchema>>) =>
-    navigate({ search: (prev) => ({ ...prev, ...patch }) as never });
+    navigate({ search: (prev: z.infer<typeof searchSchema>) => ({ ...prev, ...patch }) as never });
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
