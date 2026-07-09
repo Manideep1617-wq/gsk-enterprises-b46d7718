@@ -14,9 +14,9 @@ export const Route = createFileRoute("/_authenticated/admin")({
 
 const NAV = [
   { to: "/admin", label: "Dashboard", exact: true },
-  { to: "/admin/listings", label: "Listings" },
-  { to: "/admin/requests", label: "Seller Requests" },
-  { to: "/admin/inquiries", label: "Inquiries" },
+  { to: "/admin/listings", label: "Listings", exact: false },
+  { to: "/admin/requests", label: "Seller Requests", exact: false },
+  { to: "/admin/inquiries", label: "Inquiries", exact: false },
 ] as const;
 
 function AdminShell() {
