@@ -14,16 +14,209 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      inquiries: {
+        Row: {
+          buyer_name: string
+          created_at: string
+          id: string
+          listing_id: string
+          message: string | null
+          phone: string
+          status: Database["public"]["Enums"]["inquiry_status"]
+        }
+        Insert: {
+          buyer_name: string
+          created_at?: string
+          id?: string
+          listing_id: string
+          message?: string | null
+          phone: string
+          status?: Database["public"]["Enums"]["inquiry_status"]
+        }
+        Update: {
+          buyer_name?: string
+          created_at?: string
+          id?: string
+          listing_id?: string
+          message?: string | null
+          phone?: string
+          status?: Database["public"]["Enums"]["inquiry_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inquiries_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listings: {
+        Row: {
+          address_text: string
+          amenities: string[]
+          area_unit: Database["public"]["Enums"]["area_unit"]
+          area_value: number
+          cover_image: string | null
+          created_at: string
+          description: string | null
+          facing: Database["public"]["Enums"]["facing_dir"] | null
+          id: string
+          images: string[]
+          latitude: number | null
+          listing_type: Database["public"]["Enums"]["listing_kind"]
+          longitude: number | null
+          price: number
+          property_type: Database["public"]["Enums"]["property_kind"]
+          status: Database["public"]["Enums"]["listing_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          address_text: string
+          amenities?: string[]
+          area_unit?: Database["public"]["Enums"]["area_unit"]
+          area_value: number
+          cover_image?: string | null
+          created_at?: string
+          description?: string | null
+          facing?: Database["public"]["Enums"]["facing_dir"] | null
+          id?: string
+          images?: string[]
+          latitude?: number | null
+          listing_type: Database["public"]["Enums"]["listing_kind"]
+          longitude?: number | null
+          price: number
+          property_type: Database["public"]["Enums"]["property_kind"]
+          status?: Database["public"]["Enums"]["listing_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          address_text?: string
+          amenities?: string[]
+          area_unit?: Database["public"]["Enums"]["area_unit"]
+          area_value?: number
+          cover_image?: string | null
+          created_at?: string
+          description?: string | null
+          facing?: Database["public"]["Enums"]["facing_dir"] | null
+          id?: string
+          images?: string[]
+          latitude?: number | null
+          listing_type?: Database["public"]["Enums"]["listing_kind"]
+          longitude?: number | null
+          price?: number
+          property_type?: Database["public"]["Enums"]["property_kind"]
+          status?: Database["public"]["Enums"]["listing_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      seller_requests: {
+        Row: {
+          area_unit: Database["public"]["Enums"]["area_unit"] | null
+          area_value: number | null
+          created_at: string
+          description: string | null
+          expected_price: number | null
+          facing: Database["public"]["Enums"]["facing_dir"] | null
+          id: string
+          images: string[]
+          listing_type: Database["public"]["Enums"]["listing_kind"]
+          location: string
+          phone: string
+          property_type: Database["public"]["Enums"]["property_kind"]
+          seller_name: string
+          status: Database["public"]["Enums"]["request_status"]
+        }
+        Insert: {
+          area_unit?: Database["public"]["Enums"]["area_unit"] | null
+          area_value?: number | null
+          created_at?: string
+          description?: string | null
+          expected_price?: number | null
+          facing?: Database["public"]["Enums"]["facing_dir"] | null
+          id?: string
+          images?: string[]
+          listing_type: Database["public"]["Enums"]["listing_kind"]
+          location: string
+          phone: string
+          property_type: Database["public"]["Enums"]["property_kind"]
+          seller_name: string
+          status?: Database["public"]["Enums"]["request_status"]
+        }
+        Update: {
+          area_unit?: Database["public"]["Enums"]["area_unit"] | null
+          area_value?: number | null
+          created_at?: string
+          description?: string | null
+          expected_price?: number | null
+          facing?: Database["public"]["Enums"]["facing_dir"] | null
+          id?: string
+          images?: string[]
+          listing_type?: Database["public"]["Enums"]["listing_kind"]
+          location?: string
+          phone?: string
+          property_type?: Database["public"]["Enums"]["property_kind"]
+          seller_name?: string
+          status?: Database["public"]["Enums"]["request_status"]
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin"
+      area_unit: "sqft" | "sqyd" | "acre" | "cent" | "gunta"
+      facing_dir:
+        | "north"
+        | "south"
+        | "east"
+        | "west"
+        | "north_east"
+        | "north_west"
+        | "south_east"
+        | "south_west"
+      inquiry_status: "new" | "contacted" | "closed"
+      listing_kind: "sale" | "rent"
+      listing_status: "active" | "sold" | "rented" | "inactive"
+      property_kind: "house" | "flat" | "plot" | "commercial" | "agricultural"
+      request_status: "pending" | "approved" | "rejected" | "contacted"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +343,24 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin"],
+      area_unit: ["sqft", "sqyd", "acre", "cent", "gunta"],
+      facing_dir: [
+        "north",
+        "south",
+        "east",
+        "west",
+        "north_east",
+        "north_west",
+        "south_east",
+        "south_west",
+      ],
+      inquiry_status: ["new", "contacted", "closed"],
+      listing_kind: ["sale", "rent"],
+      listing_status: ["active", "sold", "rented", "inactive"],
+      property_kind: ["house", "flat", "plot", "commercial", "agricultural"],
+      request_status: ["pending", "approved", "rejected", "contacted"],
+    },
   },
 } as const
