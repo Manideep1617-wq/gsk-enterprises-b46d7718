@@ -34,8 +34,8 @@ const schema = z.object({
   latitude: z.number().nullable().optional(),
   longitude: z.number().nullable().optional(),
   cover_image: z.string().url().nullable().optional(),
-  images: z.array(z.string().url()).default([]),
-  amenities: z.array(z.string()).default([]),
+  images: z.array(z.string().url()),
+  amenities: z.array(z.string()),
   status: z.enum(["active", "sold", "rented", "inactive"]),
 });
 export type ListingFormValues = z.infer<typeof schema>;
