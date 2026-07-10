@@ -115,9 +115,10 @@ export const adminCreateListing = createServerFn({ method: "POST" })
       for (const image of image_uploads) {
         const safeName = image.name.replace(/[^\w.\-]+/g, "_");
         const path = `${context.userId}/${crypto.randomUUID()}-${safeName}`;
+        const bytes = Uint8Array.from(atob(image.base64), (char) => char.charCodeAt(0));
         const { error: uploadError } = await supabaseAdmin.storage
           .from("property-images")
-          .upload(path, Buffer.from(image.base64, "base64"), {
+          .upload(path, bytes, {
             contentType: image.type,
             cacheControl: "31536000",
             upsert: false,
@@ -168,9 +169,10 @@ export const adminUpdateListing = createServerFn({ method: "POST" })
       for (const image of image_uploads) {
         const safeName = image.name.replace(/[^\w.\-]+/g, "_");
         const path = `${context.userId}/${crypto.randomUUID()}-${safeName}`;
+        const bytes = Uint8Array.from(atob(image.base64), (char) => char.charCodeAt(0));
         const { error: uploadError } = await supabaseAdmin.storage
           .from("property-images")
-          .upload(path, Buffer.from(image.base64, "base64"), {
+          .upload(path, bytes, {
             contentType: image.type,
             cacheControl: "31536000",
             upsert: false,
