@@ -89,6 +89,16 @@ const listingPayload = z.object({
   longitude: z.number().nullable().optional(),
   cover_image: z.string().url().nullable().optional(),
   images: z.array(z.string().url()).optional(),
+  image_uploads: z
+    .array(
+      z.object({
+        name: z.string().min(1).max(255),
+        type: z.string().min(1).max(100),
+        base64: z.string().min(1),
+        previewUrl: z.string().url(),
+      }),
+    )
+    .optional(),
   amenities: z.array(z.string()).optional(),
   status: z.enum(["active", "sold", "rented", "inactive"]).optional(),
 });
@@ -98,13 +108,45 @@ export const adminCreateListing = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => listingPayload.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
+    const { image_uploads = [], ...listingData } = data;
+    const uploadedImages: Array<{ previewUrl: string; signedUrl: string }> = [];
+    if (image_uploads.length > 0) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      for (const image of image_uploads) {
+        const safeName = image.name.replace(/[^\w.\-]+/g, "_");
+        const path = `${context.userId}/${crypto.randomUUID()}-${safeName}`;
+        const { error: uploadError } = await supabaseAdmin.storage
+          .from("property-images")
+          .upload(path, Buffer.from(image.base64, "base64"), {
+            contentType: image.type,
+            cacheControl: "31536000",
+            upsert: false,
+          });
+        if (uploadError) throw new Error(uploadError.message);
+
+        const { data: signed, error: signError } = await supabaseAdmin.storage
+          .from("property-images")
+          .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+        if (signError || !signed?.signedUrl) {
+          throw new Error(signError?.message ?? "Could not create image URL");
+        }
+        uploadedImages.push({ previewUrl: image.previewUrl, signedUrl: signed.signedUrl });
+      }
+    }
+
+    const imageUrls = [...(listingData.images ?? []), ...uploadedImages.map((image) => image.signedUrl)];
+    const coverImage = uploadedImages.find((image) => image.previewUrl === listingData.cover_image)?.signedUrl
+      ?? listingData.cover_image
+      ?? imageUrls[0]
+      ?? null;
+
     const { data: row, error } = await context.supabase
       .from("listings")
       .insert({
-        ...data,
-        cover_image: data.cover_image ?? null,
-        images: data.images ?? [],
-        amenities: data.amenities ?? [],
+        ...listingData,
+        cover_image: coverImage,
+        images: imageUrls,
+        amenities: listingData.amenities ?? [],
       })
       .select("id")
       .single();
@@ -119,9 +161,46 @@ export const adminUpdateListing = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
+    const { image_uploads = [], ...patch } = data.patch;
+    const uploadedImages: Array<{ previewUrl: string; signedUrl: string }> = [];
+    if (image_uploads.length > 0) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      for (const image of image_uploads) {
+        const safeName = image.name.replace(/[^\w.\-]+/g, "_");
+        const path = `${context.userId}/${crypto.randomUUID()}-${safeName}`;
+        const { error: uploadError } = await supabaseAdmin.storage
+          .from("property-images")
+          .upload(path, Buffer.from(image.base64, "base64"), {
+            contentType: image.type,
+            cacheControl: "31536000",
+            upsert: false,
+          });
+        if (uploadError) throw new Error(uploadError.message);
+
+        const { data: signed, error: signError } = await supabaseAdmin.storage
+          .from("property-images")
+          .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+        if (signError || !signed?.signedUrl) {
+          throw new Error(signError?.message ?? "Could not create image URL");
+        }
+        uploadedImages.push({ previewUrl: image.previewUrl, signedUrl: signed.signedUrl });
+      }
+    }
+
+    const nextImages = [...(patch.images ?? []), ...uploadedImages.map((image) => image.signedUrl)];
+    const nextCover = uploadedImages.find((image) => image.previewUrl === patch.cover_image)?.signedUrl
+      ?? patch.cover_image
+      ?? nextImages[0]
+      ?? null;
+    const nextPatch = {
+      ...patch,
+      images: nextImages,
+      cover_image: nextCover,
+    };
+
     const { error } = await context.supabase
       .from("listings")
-      .update(data.patch)
+      .update(nextPatch)
       .eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
