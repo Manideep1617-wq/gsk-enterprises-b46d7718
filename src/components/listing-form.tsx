@@ -42,6 +42,12 @@ export type ListingFormSubmitValues = ListingFormValues & {
   pendingImages: Array<{ file: File; previewUrl: string }>;
 };
 
+function cleanInitialValues(initial?: Partial<ListingFormValues>) {
+  return Object.fromEntries(
+    Object.entries(initial ?? {}).filter(([, value]) => value !== undefined),
+  ) as Partial<ListingFormValues>;
+}
+
 export function ListingForm({
   initial,
   submitting,
@@ -51,6 +57,7 @@ export function ListingForm({
   submitting?: boolean;
   onSubmit: (v: ListingFormSubmitValues) => void;
 }) {
+  const safeInitial = cleanInitialValues(initial);
   const form = useForm<ListingFormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -69,12 +76,12 @@ export function ListingForm({
       images: [],
       amenities: [],
       status: "active",
-      ...initial,
+      ...safeInitial,
     },
   });
 
   useEffect(() => {
-    if (initial) form.reset({ ...form.getValues(), ...initial });
+    if (initial) form.reset({ ...form.getValues(), ...cleanInitialValues(initial) });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initial?.title]);
 
