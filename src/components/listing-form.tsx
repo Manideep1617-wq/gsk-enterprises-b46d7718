@@ -117,12 +117,6 @@ export function ListingForm({
     if (cover === url) form.setValue("cover_image", images[0] ?? pendingFiles.find((p) => p.url !== url)?.url ?? null);
   };
 
-  useEffect(() => {
-    return () => {
-      pendingFiles.forEach((pending) => URL.revokeObjectURL(pending.url));
-    };
-  }, [pendingFiles]);
-
   const handleSubmit = (values: ListingFormValues) => {
     onSubmit({
       ...values,
