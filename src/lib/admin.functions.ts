@@ -2,23 +2,27 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-async function assertAdmin(supabase: any, userId: string) {
-  const { data, error } = await supabase.rpc("has_role", {
-    _user_id: userId,
-    _role: "admin",
-  });
+async function isAdmin(supabase: any, userId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("role", "admin")
+    .maybeSingle();
   if (error) throw new Error(error.message);
-  if (!data) throw new Error("Forbidden: admin role required");
+  return !!data;
+}
+
+async function assertAdmin(supabase: any, userId: string) {
+  if (!(await isAdmin(supabase, userId))) {
+    throw new Error("Forbidden: admin role required");
+  }
 }
 
 export const adminMe = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data } = await context.supabase.rpc("has_role", {
-      _user_id: context.userId,
-      _role: "admin",
-    });
-    return { userId: context.userId, isAdmin: !!data };
+    return { userId: context.userId, isAdmin: await isAdmin(context.supabase, context.userId) };
   });
 
 export const adminStats = createServerFn({ method: "GET" })
