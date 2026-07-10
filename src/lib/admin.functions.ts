@@ -95,7 +95,7 @@ const listingPayload = z.object({
         name: z.string().min(1).max(255),
         type: z.string().min(1).max(100),
         base64: z.string().min(1),
-        previewUrl: z.string().url(),
+        previewUrl: z.string().min(1),
       }),
     )
     .optional(),
