@@ -91,8 +91,13 @@ export function ListingForm({
           .from("property-images")
           .upload(path, file, { cacheControl: "3600", upsert: false });
         if (error) throw error;
-        const { data } = supabase.storage.from("property-images").getPublicUrl(path);
-        uploaded.push(data.publicUrl);
+        // Bucket is private (workspace policy); use a long-lived signed URL so
+        // the image is viewable everywhere it's rendered.
+        const { data: signed, error: signErr } = await supabase.storage
+          .from("property-images")
+          .createSignedUrl(path, 60 * 60 * 24 * 365 * 10); // 10 years
+        if (signErr || !signed?.signedUrl) throw signErr ?? new Error("Could not sign URL");
+        uploaded.push(signed.signedUrl);
       }
       const next = [...images, ...uploaded];
       form.setValue("images", next, { shouldDirty: true });
