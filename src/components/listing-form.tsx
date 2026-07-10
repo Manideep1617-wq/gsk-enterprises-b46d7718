@@ -2,9 +2,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
 import { X, Upload } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -40,6 +38,16 @@ const schema = z.object({
 });
 export type ListingFormValues = z.infer<typeof schema>;
 
+export type ListingFormSubmitValues = ListingFormValues & {
+  pendingImages: Array<{ file: File; previewUrl: string }>;
+};
+
+function cleanInitialValues(initial?: Partial<ListingFormValues>) {
+  return Object.fromEntries(
+    Object.entries(initial ?? {}).filter(([, value]) => value !== undefined),
+  ) as Partial<ListingFormValues>;
+}
+
 export function ListingForm({
   initial,
   submitting,
@@ -47,8 +55,9 @@ export function ListingForm({
 }: {
   initial?: Partial<ListingFormValues>;
   submitting?: boolean;
-  onSubmit: (v: ListingFormValues) => void;
+  onSubmit: (v: ListingFormSubmitValues) => void;
 }) {
+  const safeInitial = cleanInitialValues(initial);
   const form = useForm<ListingFormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -67,45 +76,29 @@ export function ListingForm({
       images: [],
       amenities: [],
       status: "active",
-      ...initial,
+      ...safeInitial,
     },
   });
 
   useEffect(() => {
-    if (initial) form.reset({ ...form.getValues(), ...initial });
+    if (initial) form.reset({ ...form.getValues(), ...cleanInitialValues(initial) });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initial?.title]);
 
   const images = form.watch("images");
   const cover = form.watch("cover_image");
-  const [uploading, setUploading] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState<Array<{ id: string; file: File; url: string }>>([]);
 
   const upload = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
-    setUploading(true);
-    try {
-      const uploaded: string[] = [];
-      for (const file of Array.from(files)) {
-        const path = `${crypto.randomUUID()}-${file.name.replace(/[^\w.\-]+/g, "_")}`;
-        const { error } = await supabase.storage
-          .from("property-images")
-          .upload(path, file, { cacheControl: "3600", upsert: false });
-        if (error) throw error;
-        // Bucket is private (workspace policy); use a long-lived signed URL so
-        // the image is viewable everywhere it's rendered.
-        const { data: signed, error: signErr } = await supabase.storage
-          .from("property-images")
-          .createSignedUrl(path, 60 * 60 * 24 * 365 * 10); // 10 years
-        if (signErr || !signed?.signedUrl) throw signErr ?? new Error("Could not sign URL");
-        uploaded.push(signed.signedUrl);
-      }
-      const next = [...images, ...uploaded];
-      form.setValue("images", next, { shouldDirty: true });
-      if (!cover && next[0]) form.setValue("cover_image", next[0]);
-    } catch (e: any) {
-      toast.error(e.message || "Upload failed");
-    } finally {
-      setUploading(false);
+    const nextFiles = Array.from(files).map((file) => ({
+      id: crypto.randomUUID(),
+      file,
+      url: URL.createObjectURL(file),
+    }));
+    setPendingFiles((current) => [...current, ...nextFiles]);
+    if (!cover && !images[0] && nextFiles[0]) {
+      form.setValue("cover_image", nextFiles[0].url, { shouldDirty: true });
     }
   };
 
@@ -115,9 +108,25 @@ export function ListingForm({
     if (cover === url) form.setValue("cover_image", next[0] ?? null);
   };
 
+  const removePendingImage = (url: string) => {
+    setPendingFiles((current) => {
+      const item = current.find((pending) => pending.url === url);
+      if (item) URL.revokeObjectURL(item.url);
+      return current.filter((pending) => pending.url !== url);
+    });
+    if (cover === url) form.setValue("cover_image", images[0] ?? pendingFiles.find((p) => p.url !== url)?.url ?? null);
+  };
+
+  const handleSubmit = (values: ListingFormValues) => {
+    onSubmit({
+      ...values,
+      pendingImages: pendingFiles.map((pending) => ({ file: pending.file, previewUrl: pending.url })),
+    });
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="grid gap-6">
         <FormField
           control={form.control}
           name="title"
@@ -331,10 +340,31 @@ export function ListingForm({
                 </button>
               </div>
             ))}
+            {pendingFiles.map((pending) => (
+              <div key={pending.id} className="relative h-24 w-24 overflow-hidden rounded-lg border border-border">
+                <img src={pending.url} alt="Pending property upload" className="h-full w-full object-cover" />
+                <button
+                  type="button"
+                  className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-black/70 text-white"
+                  onClick={() => removePendingImage(pending.url)}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => form.setValue("cover_image", pending.url)}
+                  className={`absolute inset-x-0 bottom-0 py-0.5 text-[10px] font-bold uppercase tracking-widest ${
+                    cover === pending.url ? "bg-gold text-gold-foreground" : "bg-black/60 text-white"
+                  }`}
+                >
+                  {cover === pending.url ? "Cover" : "Set cover"}
+                </button>
+              </div>
+            ))}
             <label className="grid h-24 w-24 cursor-pointer place-items-center rounded-lg border border-dashed border-border text-muted-foreground hover:border-gold">
               <div className="flex flex-col items-center text-xs">
                 <Upload className="mb-1 h-4 w-4" />
-                {uploading ? "…" : "Upload"}
+                Upload
               </div>
               <input
                 type="file"
