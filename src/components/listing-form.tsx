@@ -39,7 +39,7 @@ const schema = z.object({
 export type ListingFormValues = z.infer<typeof schema>;
 
 export type ListingFormSubmitValues = ListingFormValues & {
-  imageFiles: File[];
+  pendingImages: Array<{ file: File; previewUrl: string }>;
 };
 
 export function ListingForm({
@@ -117,7 +117,10 @@ export function ListingForm({
   }, [pendingFiles]);
 
   const handleSubmit = (values: ListingFormValues) => {
-    onSubmit({ ...values, imageFiles: pendingFiles.map((pending) => pending.file) });
+    onSubmit({
+      ...values,
+      pendingImages: pendingFiles.map((pending) => ({ file: pending.file, previewUrl: pending.url })),
+    });
   };
 
   return (
