@@ -2,8 +2,9 @@ import { createFileRoute, notFound, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { ListingForm, type ListingFormValues } from "@/components/listing-form";
+import { ListingForm, type ListingFormSubmitValues } from "@/components/listing-form";
 import { adminGetListing, adminUpdateListing } from "@/lib/admin.functions";
+import { prepareImageUploads } from "@/lib/image-upload.client";
 
 export const Route = createFileRoute("/_authenticated/admin/listings/$id/edit")({
   component: EditListingPage,
@@ -20,7 +21,13 @@ function EditListingPage() {
     queryFn: () => get({ data: { id } }),
   });
   const mut = useMutation({
-    mutationFn: (v: ListingFormValues) => upd({ data: { id, patch: v as any } }),
+    mutationFn: async ({ pendingImages, ...values }: ListingFormSubmitValues) =>
+      upd({
+        data: {
+          id,
+          patch: { ...values, image_uploads: await prepareImageUploads(pendingImages) } as any,
+        },
+      }),
     onSuccess: () => {
       toast.success("Listing updated");
       qc.invalidateQueries({ queryKey: ["admin", "listings"] });

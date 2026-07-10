@@ -1,8 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ListingForm, type ListingFormValues } from "@/components/listing-form";
+import { ListingForm, type ListingFormSubmitValues } from "@/components/listing-form";
 import { adminCreateListing } from "@/lib/admin.functions";
+import { prepareImageUploads } from "@/lib/image-upload.client";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/listings/new")({
@@ -13,10 +14,11 @@ function NewListingPage() {
   const nav = useNavigate();
   const qc = useQueryClient();
   const create = useServerFn(adminCreateListing);
-  const prefill = (Route as any).useSearch?.() as Partial<ListingFormValues> | undefined;
+  const prefill = (Route as any).useSearch?.() as Partial<ListingFormSubmitValues> | undefined;
 
   const mut = useMutation({
-    mutationFn: (v: ListingFormValues) => create({ data: v as any }),
+    mutationFn: async ({ pendingImages, ...values }: ListingFormSubmitValues) =>
+      create({ data: { ...values, image_uploads: await prepareImageUploads(pendingImages) } as any }),
     onSuccess: () => {
       toast.success("Listing created");
       qc.invalidateQueries({ queryKey: ["admin", "listings"] });
