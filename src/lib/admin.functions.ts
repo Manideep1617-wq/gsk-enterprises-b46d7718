@@ -187,16 +187,16 @@ export const adminUpdateListing = createServerFn({ method: "POST" })
       }
     }
 
-    const nextImages = [...(patch.images ?? []), ...uploadedImages.map((image) => image.signedUrl)];
-    const nextCover = uploadedImages.find((image) => image.previewUrl === patch.cover_image)?.signedUrl
-      ?? patch.cover_image
-      ?? nextImages[0]
-      ?? null;
-    const nextPatch = {
-      ...patch,
-      images: nextImages,
-      cover_image: nextCover,
-    };
+    const nextPatch = { ...patch };
+    if (uploadedImages.length > 0 || "images" in patch || "cover_image" in patch) {
+      const nextImages = [...(patch.images ?? []), ...uploadedImages.map((image) => image.signedUrl)];
+      const nextCover = uploadedImages.find((image) => image.previewUrl === patch.cover_image)?.signedUrl
+        ?? patch.cover_image
+        ?? nextImages[0]
+        ?? null;
+      nextPatch.images = nextImages;
+      nextPatch.cover_image = nextCover;
+    }
 
     const { error } = await context.supabase
       .from("listings")
