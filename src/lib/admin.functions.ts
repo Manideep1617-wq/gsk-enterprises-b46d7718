@@ -87,7 +87,7 @@ const listingPayload = z.object({
   address_text: z.string().trim().min(1).max(400),
   latitude: z.number().nullable().optional(),
   longitude: z.number().nullable().optional(),
-  cover_image: z.string().url().nullable().optional(),
+  cover_image: z.string().min(1).nullable().optional(),
   images: z.array(z.string().url()).optional(),
   image_uploads: z
     .array(
@@ -117,16 +117,16 @@ export const adminCreateListing = createServerFn({ method: "POST" })
         const path = `${context.userId}/${crypto.randomUUID()}-${safeName}`;
         const bytes = Uint8Array.from(atob(image.base64), (char) => char.charCodeAt(0));
         const { error: uploadError } = await supabaseAdmin.storage
-          .from("property-images")
+          .from("listing-images")
           .upload(path, bytes, {
             contentType: image.type,
             cacheControl: "31536000",
             upsert: false,
           });
-        if (uploadError) throw new Error(uploadError.message);
+        if (uploadError) throw new Error(`Failed to upload ${image.name}, please try again`);
 
         const { data: signed, error: signError } = await supabaseAdmin.storage
-          .from("property-images")
+          .from("listing-images")
           .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
         if (signError || !signed?.signedUrl) {
           throw new Error(signError?.message ?? "Could not create image URL");
@@ -171,16 +171,16 @@ export const adminUpdateListing = createServerFn({ method: "POST" })
         const path = `${context.userId}/${crypto.randomUUID()}-${safeName}`;
         const bytes = Uint8Array.from(atob(image.base64), (char) => char.charCodeAt(0));
         const { error: uploadError } = await supabaseAdmin.storage
-          .from("property-images")
+          .from("listing-images")
           .upload(path, bytes, {
             contentType: image.type,
             cacheControl: "31536000",
             upsert: false,
           });
-        if (uploadError) throw new Error(uploadError.message);
+        if (uploadError) throw new Error(`Failed to upload ${image.name}, please try again`);
 
         const { data: signed, error: signError } = await supabaseAdmin.storage
-          .from("property-images")
+          .from("listing-images")
           .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
         if (signError || !signed?.signedUrl) {
           throw new Error(signError?.message ?? "Could not create image URL");
@@ -213,8 +213,40 @@ export const adminDeleteListing = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.supabase, context.userId);
+    const { data: listing, error: readError } = await context.supabase
+      .from("listings")
+      .select("images,cover_image")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (readError) throw new Error(readError.message);
+
     const { error } = await context.supabase.from("listings").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
+
+    const imageUrls = Array.from(new Set([...(listing?.images ?? []), listing?.cover_image].filter(Boolean))) as string[];
+    const paths = imageUrls
+      .map((url) => {
+        try {
+          const pathname = new URL(url).pathname;
+          const signedMarker = "/storage/v1/object/sign/listing-images/";
+          const publicMarker = "/storage/v1/object/public/listing-images/";
+          if (pathname.includes(signedMarker)) {
+            return decodeURIComponent(pathname.split(signedMarker)[1]);
+          }
+          if (pathname.includes(publicMarker)) {
+            return decodeURIComponent(pathname.split(publicMarker)[1]);
+          }
+        } catch {
+          return null;
+        }
+        return null;
+      })
+      .filter(Boolean) as string[];
+
+    if (paths.length > 0) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      await supabaseAdmin.storage.from("listing-images").remove(paths);
+    }
     return { ok: true };
   });
 

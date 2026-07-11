@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Plus, Pencil, Trash2 } from "lucide-react";
@@ -21,6 +21,7 @@ export const Route = createFileRoute("/_authenticated/admin/listings")({
 function ListingsAdmin() {
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
   const list = useServerFn(adminListListings);
   const upd = useServerFn(adminUpdateListing);
   const del = useServerFn(adminDeleteListing);
@@ -38,6 +39,10 @@ function ListingsAdmin() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  if (pathname !== "/admin/listings") {
+    return <Outlet />;
+  }
 
   return (
     <div>
@@ -115,7 +120,7 @@ function ListingsAdmin() {
                       variant="ghost"
                       className="text-destructive"
                       onClick={() => {
-                        if (confirm(`Delete "${l.title}"?`)) deleteMut.mutate(l.id);
+                        if (confirm("Are you sure you want to delete this listing?")) deleteMut.mutate(l.id);
                       }}
                     >
                       <Trash2 className="h-4 w-4" />

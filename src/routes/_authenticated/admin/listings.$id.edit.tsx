@@ -46,6 +46,8 @@ function EditListingPage() {
         <ListingForm
           initial={data as any}
           submitting={mut.isPending}
+          submitLabel="Update Listing"
+          onCancel={() => nav({ to: "/admin/listings" })}
           onSubmit={(v) => mut.mutate(v)}
         />
       </div>
