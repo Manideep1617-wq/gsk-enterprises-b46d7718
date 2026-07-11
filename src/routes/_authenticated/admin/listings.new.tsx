@@ -20,7 +20,7 @@ function NewListingPage() {
     mutationFn: async ({ pendingImages, ...values }: ListingFormSubmitValues) =>
       create({ data: { ...values, image_uploads: await prepareImageUploads(pendingImages) } as any }),
     onSuccess: () => {
-      toast.success("Listing created");
+      toast.success("Listing published successfully");
       qc.invalidateQueries({ queryKey: ["admin", "listings"] });
       nav({ to: "/admin/listings" });
     },
@@ -37,6 +37,8 @@ function NewListingPage() {
         <ListingForm
           initial={prefill}
           submitting={mut.isPending}
+          submitLabel="Publish Listing"
+          onCancel={() => nav({ to: "/admin/listings" })}
           onSubmit={(v) => mut.mutate(v)}
         />
       </div>
