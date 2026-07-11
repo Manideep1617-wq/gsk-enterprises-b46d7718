@@ -31,7 +31,7 @@ const schema = z.object({
   address_text: z.string().trim().min(1).max(400),
   latitude: z.number().nullable().optional(),
   longitude: z.number().nullable().optional(),
-  cover_image: z.string().url().nullable().optional(),
+  cover_image: z.string().min(1).nullable().optional(),
   images: z.array(z.string().url()),
   amenities: z.array(z.string()),
   status: z.enum(["active", "sold", "rented", "inactive"]),
