@@ -27,10 +27,6 @@ function ListingsAdmin() {
   const del = useServerFn(adminDeleteListing);
   const { data = [] } = useQuery({ queryKey: ["admin", "listings"], queryFn: () => list() });
 
-  if (pathname !== "/admin/listings") {
-    return <Outlet />;
-  }
-
   const updateMut = useMutation({
     mutationFn: (v: { id: string; patch: any }) => upd({ data: v }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "listings"] }),
@@ -43,6 +39,10 @@ function ListingsAdmin() {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+
+  if (pathname !== "/admin/listings") {
+    return <Outlet />;
+  }
 
   return (
     <div>
