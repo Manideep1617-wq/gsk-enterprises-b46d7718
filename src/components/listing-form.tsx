@@ -51,10 +51,14 @@ function cleanInitialValues(initial?: Partial<ListingFormValues>) {
 export function ListingForm({
   initial,
   submitting,
+  submitLabel = "Save Listing",
+  onCancel,
   onSubmit,
 }: {
   initial?: Partial<ListingFormValues>;
   submitting?: boolean;
+  submitLabel?: string;
+  onCancel?: () => void;
   onSubmit: (v: ListingFormSubmitValues) => void;
 }) {
   const safeInitial = cleanInitialValues(initial);
@@ -97,6 +101,7 @@ export function ListingForm({
       url: URL.createObjectURL(file),
     }));
     setPendingFiles((current) => [...current, ...nextFiles]);
+    form.clearErrors("images");
     if (!cover && !images[0] && nextFiles[0]) {
       form.setValue("cover_image", nextFiles[0].url, { shouldDirty: true });
     }
@@ -118,6 +123,11 @@ export function ListingForm({
   };
 
   const handleSubmit = (values: ListingFormValues) => {
+    if (values.images.length + pendingFiles.length === 0) {
+      form.setError("images", { type: "manual", message: "Add at least one image." });
+      return;
+    }
+
     onSubmit({
       ...values,
       pendingImages: pendingFiles.map((pending) => ({ file: pending.file, previewUrl: pending.url })),
@@ -180,8 +190,9 @@ export function ListingForm({
                 <FormControl>
                   <Input
                     type="number"
+                    min="0"
                     value={field.value ?? ""}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
+                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
                   />
                 </FormControl>
                 <FormMessage />
@@ -197,8 +208,9 @@ export function ListingForm({
                 <FormControl>
                   <Input
                     type="number"
+                    min="0"
                     value={field.value ?? ""}
-                    onChange={(e) => field.onChange(Number(e.target.value))}
+                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
                   />
                 </FormControl>
                 <FormMessage />
@@ -317,7 +329,7 @@ export function ListingForm({
         />
 
         <div>
-          <FormLabel>Images</FormLabel>
+          <FormLabel>Images *</FormLabel>
           <div className="mt-2 flex flex-wrap gap-3">
             {images.map((url) => (
               <div key={url} className="relative h-24 w-24 overflow-hidden rounded-lg border border-border">
@@ -364,7 +376,7 @@ export function ListingForm({
             <label className="grid h-24 w-24 cursor-pointer place-items-center rounded-lg border border-dashed border-border text-muted-foreground hover:border-gold">
               <div className="flex flex-col items-center text-xs">
                 <Upload className="mb-1 h-4 w-4" />
-                Upload
+                Upload Images
               </div>
               <input
                 type="file"
@@ -375,11 +387,23 @@ export function ListingForm({
               />
             </label>
           </div>
+          {form.formState.errors.images?.message && (
+            <p className="mt-2 text-sm font-medium text-destructive">
+              {form.formState.errors.images.message}
+            </p>
+          )}
         </div>
 
-        <Button type="submit" disabled={submitting} className="w-full bg-brand text-brand-foreground md:w-auto">
-          {submitting ? "Saving…" : "Save Listing"}
-        </Button>
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          {onCancel && (
+            <Button type="button" variant="outline" disabled={submitting} onClick={onCancel}>
+              Cancel
+            </Button>
+          )}
+          <Button type="submit" disabled={submitting} className="w-full bg-brand text-brand-foreground sm:w-auto">
+            {submitting ? "Saving…" : submitLabel}
+          </Button>
+        </div>
       </form>
     </Form>
   );
