@@ -329,7 +329,7 @@ export function ListingForm({
         />
 
         <div>
-          <FormLabel>Images *</FormLabel>
+          <label className="text-sm font-medium leading-none">Images *</label>
           <div className="mt-2 flex flex-wrap gap-3">
             {images.map((url) => (
               <div key={url} className="relative h-24 w-24 overflow-hidden rounded-lg border border-border">
