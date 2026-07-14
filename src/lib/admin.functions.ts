@@ -9,7 +9,6 @@ export const adminMe = createServerFn({ method: "GET" })
     const access = await getAdminAccess(context.userId);
     return {
       userId: context.userId,
-      email: typeof context.claims.email === "string" ? context.claims.email : null,
       ...access,
     };
   });
