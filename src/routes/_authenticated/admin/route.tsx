@@ -1,7 +1,8 @@
-import { createFileRoute, Link, Outlet, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { LogOut } from "lucide-react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { adminMe } from "@/lib/admin.functions";
@@ -22,13 +23,40 @@ const NAV = [
 function AdminShell() {
   const navigate = useNavigate();
   const me = useServerFn(adminMe);
+  const [sessionReady, setSessionReady] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    supabase.auth.getUser().then(({ data, error }) => {
+      if (cancelled) return;
+      if (error || !data.user) {
+        navigate({ to: "/auth", replace: true });
+        return;
+      }
+      setSessionReady(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate]);
+
   const { data, isLoading, error } = useQuery({
     queryKey: ["admin", "me"],
     queryFn: () => me(),
+    enabled: sessionReady,
+    retry: (failureCount, err) => {
+      const message = err instanceof Error ? err.message : String(err);
+      return failureCount < 3 && /unauthorized|authorization|invalid token/i.test(message);
+    },
   });
 
-  if (isLoading) {
-    return <div className="grid min-h-screen place-items-center text-muted-foreground">Loading…</div>;
+  useEffect(() => {
+    if (error) console.warn("Admin access check failed", error);
+    if (data && !data.isAdmin) console.warn("Admin access denied", data.reason);
+  }, [data, error]);
+
+  if (!sessionReady || isLoading) {
+    return <div className="grid min-h-screen place-items-center text-muted-foreground">Checking access…</div>;
   }
   if (error || !data?.isAdmin) {
     return (
@@ -39,6 +67,11 @@ function AdminShell() {
             Only the site owner can access the admin dashboard. This account is not
             authorized.
           </p>
+          {data?.reason && (
+            <p className="mt-3 rounded-md bg-surface px-3 py-2 text-xs text-muted-foreground">
+              {data.reason}
+            </p>
+          )}
           <Button
             className="mt-6"
             onClick={async () => {

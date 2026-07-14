@@ -42,11 +42,17 @@ function AuthPage() {
     e.preventDefault();
     setLoading(true);
     await supabase.auth.signOut({ scope: "local" });
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email: email.trim().toLowerCase(),
       password,
     });
     if (!error) {
+      if (data.session) {
+        await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        });
+      }
       const { error: userError } = await supabase.auth.getUser();
       if (userError) {
         setLoading(false);

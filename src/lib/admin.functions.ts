@@ -1,18 +1,23 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { assertAdmin, isAdmin } from "@/lib/admin-permissions";
 
 export const adminMe = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    return { userId: context.userId, isAdmin: await isAdmin(context.supabase, context.userId) };
+    const { getAdminAccess } = await import("@/lib/admin-permissions.server");
+    const access = await getAdminAccess(context.userId);
+    return {
+      userId: context.userId,
+      ...access,
+    };
   });
 
 export const adminStats = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertAdmin(context.supabase, context.userId);
+    const { assertAdminUser } = await import("@/lib/admin-permissions.server");
+    await assertAdminUser(context.userId);
     const [listings, pending, inquiries] = await Promise.all([
       context.supabase.from("listings").select("id", { count: "exact", head: true }).eq("status", "active"),
       context.supabase.from("seller_requests").select("id", { count: "exact", head: true }).eq("status", "pending"),
@@ -31,7 +36,8 @@ const listingFields =
 export const adminListListings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertAdmin(context.supabase, context.userId);
+    const { assertAdminUser } = await import("@/lib/admin-permissions.server");
+    await assertAdminUser(context.userId);
     const { data, error } = await context.supabase
       .from("listings")
       .select(listingFields)
@@ -44,7 +50,8 @@ export const adminGetListing = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase, context.userId);
+    const { assertAdminUser } = await import("@/lib/admin-permissions.server");
+    await assertAdminUser(context.userId);
     const { data: row, error } = await context.supabase
       .from("listings")
       .select(listingFields)
@@ -91,7 +98,8 @@ export const adminCreateListing = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => listingPayload.parse(d))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase, context.userId);
+    const { assertAdminUser } = await import("@/lib/admin-permissions.server");
+    await assertAdminUser(context.userId);
     const { image_uploads = [], ...listingData } = data;
     const uploadedImages: Array<{ previewUrl: string; signedUrl: string }> = [];
     if (image_uploads.length > 0) {
@@ -145,7 +153,8 @@ export const adminUpdateListing = createServerFn({ method: "POST" })
     z.object({ id: z.string().uuid(), patch: listingPayload.partial() }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase, context.userId);
+    const { assertAdminUser } = await import("@/lib/admin-permissions.server");
+    await assertAdminUser(context.userId);
     const { image_uploads = [], ...patch } = data.patch;
     const uploadedImages: Array<{ previewUrl: string; signedUrl: string }> = [];
     if (image_uploads.length > 0) {
@@ -196,7 +205,8 @@ export const adminDeleteListing = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase, context.userId);
+    const { assertAdminUser } = await import("@/lib/admin-permissions.server");
+    await assertAdminUser(context.userId);
     const { data: listing, error: readError } = await context.supabase
       .from("listings")
       .select("images,cover_image")
@@ -238,7 +248,8 @@ export const adminDeleteListing = createServerFn({ method: "POST" })
 export const adminListRequests = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertAdmin(context.supabase, context.userId);
+    const { assertAdminUser } = await import("@/lib/admin-permissions.server");
+    await assertAdminUser(context.userId);
     const { data, error } = await context.supabase
       .from("seller_requests")
       .select("*")
@@ -258,7 +269,8 @@ export const adminUpdateRequestStatus = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase, context.userId);
+    const { assertAdminUser } = await import("@/lib/admin-permissions.server");
+    await assertAdminUser(context.userId);
     const { error } = await context.supabase
       .from("seller_requests")
       .update({ status: data.status })
@@ -271,7 +283,8 @@ export const adminUpdateRequestStatus = createServerFn({ method: "POST" })
 export const adminListInquiries = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertAdmin(context.supabase, context.userId);
+    const { assertAdminUser } = await import("@/lib/admin-permissions.server");
+    await assertAdminUser(context.userId);
     const { data, error } = await context.supabase
       .from("inquiries")
       .select("*, listings(title)")
@@ -291,7 +304,8 @@ export const adminUpdateInquiryStatus = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase, context.userId);
+    const { assertAdminUser } = await import("@/lib/admin-permissions.server");
+    await assertAdminUser(context.userId);
     const { error } = await context.supabase
       .from("inquiries")
       .update({ status: data.status })
