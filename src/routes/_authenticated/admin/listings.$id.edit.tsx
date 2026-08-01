@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { ListingForm, type ListingFormSubmitValues } from "@/components/listing-form";
 import { adminGetListing, adminUpdateListing } from "@/lib/admin.functions";
-import { prepareImageUploads } from "@/lib/image-upload.client";
+import { prepareImageUploads } from "@/lib/image-upload-browser";
 
 export const Route = createFileRoute("/_authenticated/admin/listings/$id/edit")({
   component: EditListingPage,

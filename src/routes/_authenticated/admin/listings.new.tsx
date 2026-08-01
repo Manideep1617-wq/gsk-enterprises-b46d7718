@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ListingForm, type ListingFormSubmitValues, type ListingFormValues } from "@/components/listing-form";
 import { adminCreateListing } from "@/lib/admin.functions";
-import { prepareImageUploads } from "@/lib/image-upload.client";
+import { prepareImageUploads } from "@/lib/image-upload-browser";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/listings/new")({
