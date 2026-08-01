@@ -36,7 +36,7 @@ function HomePage() {
             </span>
             <h1 className="max-w-4xl font-display text-4xl font-bold leading-[1.1] md:text-6xl">
               Find Verified Properties in{" "}
-              <span className="text-gold">Kattedan & Sri Ram Colony</span>
+              <span className="text-gold">Kattedan ,Jalpally, Sri Ram Colony , Madhuban & Surrounding areas</span>
             </h1>
             <p className="mt-6 max-w-2xl text-lg text-white/70">
               Trusted local mediator for open plots, houses, and land. Real listings, direct
@@ -112,7 +112,7 @@ function HomePage() {
                   icon: Sparkles,
                   title: "Browse & Filter",
                   body:
-                    "Explore verified listings in Kattedan and Sri Ram Colony with clear price, area, and facing details.",
+                    "Explore verified listings in Kattedan, Jalpally, Sri Ram Colony, Madhuban & surrounding areas with clear price, area, and facing details.",
                 },
                 {
                   n: "02",
@@ -208,7 +208,7 @@ function EmptyPlaceholder() {
       </p>
       <p className="mx-auto max-w-md text-sm text-muted-foreground">
         We're onboarding verified properties. Call or WhatsApp us for the latest availability
-        in Kattedan and Sri Ram Colony.
+        in Kattedan, Jalpally, Sri Ram Colony, Madhuban & surrounding areas.
       </p>
     </div>
   );

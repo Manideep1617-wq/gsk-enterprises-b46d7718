@@ -12,7 +12,7 @@ export const Route = createFileRoute("/about")({
       {
         name: "description",
         content:
-          "Meet GSK Enterprises — trusted real estate mediator in Kattedan and Sri Ram Colony, Hyderabad. Contact us directly by phone, WhatsApp, or email.",
+          "Meet GSK Enterprises — trusted real estate mediator in Kattedan, Jalpally, Sri Ram Colony, Madhuban & surrounding areas, Hyderabad. Contact us directly by phone, WhatsApp, or email.",
       },
       { property: "og:title", content: "About & Contact — GSK Enterprises" },
       {
@@ -53,7 +53,7 @@ function AboutPage() {
             <div className="mt-4 space-y-4 leading-relaxed text-foreground">
               <p>
                 GSK Enterprises has been serving families and investors in the Kattedan,
-                Sri Ram Colony, and greater South Hyderabad belt for years. We know the
+                Jalpally, Sri Ram Colony, Madhuban, and greater South Hyderabad belt for years. We know the
                 streets, the sub-locations, and the paperwork — so you can move ahead
                 with clarity.
               </p>
