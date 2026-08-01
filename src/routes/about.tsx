@@ -12,7 +12,7 @@ export const Route = createFileRoute("/about")({
       {
         name: "description",
         content:
-          "Meet GSK Enterprises — trusted real estate mediator in Kattedan and Sri Ram Colony, Hyderabad. Contact us directly by phone, WhatsApp, or email.",
+          "Meet GSK Enterprises — trusted real estate mediator in Kattedan, Jalpally, Sri Ram Colony, Madhuban & surrounding areas, Hyderabad. Contact us directly by phone, WhatsApp, or email.",
       },
       { property: "og:title", content: "About & Contact — GSK Enterprises" },
       {
