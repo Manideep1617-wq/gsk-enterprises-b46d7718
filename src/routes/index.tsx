@@ -112,7 +112,7 @@ function HomePage() {
                   icon: Sparkles,
                   title: "Browse & Filter",
                   body:
-                    "Explore verified listings in Kattedan and Sri Ram Colony with clear price, area, and facing details.",
+                    "Explore verified listings in Kattedan, Jalpally, Sri Ram Colony, Madhuban & surrounding areas with clear price, area, and facing details.",
                 },
                 {
                   n: "02",
