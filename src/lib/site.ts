@@ -2,8 +2,8 @@
 export const SITE = {
   brand: "GSK Enterprises",
   tagline: "Real Estate Developers",
-  regionShort: "Kattedan, Jalpally, Madhuban & surrounding areas",
-  regionLong: "Kattedan, Jalpally, Sri Ram Colony, Madhuban & surrounding areas, Hyderabad",
+  regionShort: "Kattedan, Aramghar, Jalpally, Sri Ram Colony & surrounding areas",
+  regionLong: "Kattedan, Aramghar, Jalpally, Sri Ram Colony, Madhuban & surrounding areas, Hyderabad",
   email: "gshanker9700@gmail.com",
   phones: [
     { display: "+91 87121 77076", tel: "+918712177076", wa: "918712177076" },
