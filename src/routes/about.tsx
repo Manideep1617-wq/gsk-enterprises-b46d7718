@@ -53,7 +53,7 @@ function AboutPage() {
             <div className="mt-4 space-y-4 leading-relaxed text-foreground">
               <p>
                 GSK Enterprises has been serving families and investors in the Kattedan,
-                Sri Ram Colony, and greater South Hyderabad belt for years. We know the
+                Jalpally, Sri Ram Colony, Madhuban, and greater South Hyderabad belt for years. We know the
                 streets, the sub-locations, and the paperwork — so you can move ahead
                 with clarity.
               </p>
