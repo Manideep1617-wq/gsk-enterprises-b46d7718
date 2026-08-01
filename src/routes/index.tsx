@@ -208,7 +208,7 @@ function EmptyPlaceholder() {
       </p>
       <p className="mx-auto max-w-md text-sm text-muted-foreground">
         We're onboarding verified properties. Call or WhatsApp us for the latest availability
-        in Kattedan and Sri Ram Colony.
+        in Kattedan, Jalpally, Sri Ram Colony, Madhuban & surrounding areas.
       </p>
     </div>
   );
